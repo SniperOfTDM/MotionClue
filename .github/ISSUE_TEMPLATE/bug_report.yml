@@ -1,0 +1,76 @@
+name: Bug Report
+description: Report a bug in MotionClue
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+        Please include the "Copy diagnostics" output from the app if possible.
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Copy diagnostics output
+      description: |
+        Open MotionClue → tap "Copy diagnostics" in the status area.
+        Paste the output here.
+      placeholder: "Paste diagnostics here..."
+    validations:
+      required: false
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Phone model (e.g. Poco X7 Pro, Samsung Galaxy S24)
+      placeholder: "Poco X7 Pro"
+    validations:
+      required: true
+  - type: input
+    id: rom
+    attributes:
+      label: ROM / Skin
+      description: Stock, HyperOS, OneUI, AOSP, etc.
+      placeholder: "HyperOS 2.1"
+    validations:
+      required: true
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version
+      description: Android version and API level
+      placeholder: "Android 15 (API 35)"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do before the bug appeared?
+      placeholder: |
+        1. Opened the app
+        2. Tapped Start
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logcat or additional context
+      description: Any relevant logs, screenshots, or screen recordings.
+    validations:
+      required: false

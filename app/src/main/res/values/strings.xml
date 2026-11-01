@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MotionClue</string>
+    <string name="tile_label">Motion Cues</string>
+    <string name="notification_channel_name">Motion cues</string>
+    <string name="notification_title">Motion cues active</string>
+    <string name="notification_text">Dots are following vehicle motion</string>
+    <string name="notification_stop">Stop</string>
+</resources>

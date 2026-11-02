@@ -14,6 +14,18 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+enum class TransportPreset(
+    val title: String,
+    val sensitivity: Float,
+    val hybridBlend: Float,
+) {
+    CAR("Car", 1.0f, 0.5f),
+    BUS("Bus / Metro", 1.4f, 0.35f),
+    TRAIN("Train", 0.6f, 0.75f),
+    BOAT("Boat / Ferry", 1.8f, 0.20f),
+    CUSTOM("Custom", 1.0f, 0.5f);
+}
+
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "motion_settings")
 
 /**
@@ -22,6 +34,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class SettingsStore(private val context: Context) {
 
     private object Keys {
+        val PRESET = stringPreferencesKey("transport_preset")
         val SENSITIVITY = floatPreferencesKey("sensitivity")
         val HYBRID_BLEND = floatPreferencesKey("hybrid_blend")
         val DOT_SIZE_DP = floatPreferencesKey("dot_size_dp")
@@ -35,6 +48,7 @@ class SettingsStore(private val context: Context) {
     }
 
     data class Settings(
+        val presetName: String = TransportPreset.CAR.name,
         val sensitivity: Float = 1.0f,
         val hybridBlend: Float = 0.5f,
         val dotSizeDp: Float = 6f,
@@ -57,6 +71,7 @@ class SettingsStore(private val context: Context) {
 
     val settingsFlow: Flow<Settings> = context.dataStore.data.map { prefs ->
         Settings(
+            presetName = prefs[Keys.PRESET] ?: TransportPreset.CAR.name,
             sensitivity = prefs[Keys.SENSITIVITY] ?: 1.0f,
             hybridBlend = prefs[Keys.HYBRID_BLEND] ?: 0.5f,
             dotSizeDp = prefs[Keys.DOT_SIZE_DP] ?: 6f,
@@ -70,12 +85,28 @@ class SettingsStore(private val context: Context) {
         )
     }
 
+    suspend fun applyPreset(preset: TransportPreset) {
+        context.dataStore.edit {
+            it[Keys.PRESET] = preset.name
+            if (preset != TransportPreset.CUSTOM) {
+                it[Keys.SENSITIVITY] = preset.sensitivity
+                it[Keys.HYBRID_BLEND] = preset.hybridBlend
+            }
+        }
+    }
+
     suspend fun updateSensitivity(value: Float) {
-        context.dataStore.edit { it[Keys.SENSITIVITY] = value.coerceIn(0.2f, 3.0f) }
+        context.dataStore.edit {
+            it[Keys.SENSITIVITY] = value.coerceIn(0.2f, 3.0f)
+            it[Keys.PRESET] = TransportPreset.CUSTOM.name
+        }
     }
 
     suspend fun updateHybridBlend(value: Float) {
-        context.dataStore.edit { it[Keys.HYBRID_BLEND] = value.coerceIn(0f, 1f) }
+        context.dataStore.edit {
+            it[Keys.HYBRID_BLEND] = value.coerceIn(0f, 1f)
+            it[Keys.PRESET] = TransportPreset.CUSTOM.name
+        }
     }
 
     suspend fun updateDotSizeDp(value: Float) {

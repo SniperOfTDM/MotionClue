@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sniperoftdm.motionclueandro.data.SettingsStore
+import com.sniperoftdm.motionclueandro.data.TransportPreset
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -48,6 +49,27 @@ fun SettingsSection(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text("Settings", style = MaterialTheme.typography.titleMedium)
+
+            // Transport Presets
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    "Vehicle Profile",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TransportPreset.entries.forEach { preset ->
+                        FilterChip(
+                            selected = settings.presetName == preset.name,
+                            onClick = {
+                                coroutineScope.launch { settingsStore.applyPreset(preset) }
+                            },
+                            label = { Text(preset.title) },
+                        )
+                    }
+                }
+            }
 
             // Sensitivity: 0.2 to 3.0
             SettingSlider(

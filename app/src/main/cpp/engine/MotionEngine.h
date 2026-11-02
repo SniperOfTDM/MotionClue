@@ -71,6 +71,9 @@ private:
     int       rateWindowCount_    = 0;
     int64_t   lastAccelTimestampNs_ = 0;
     int32_t   droppedSamples_     = 0;
+    Vec3      lastGyro_{};
+    int64_t   lastProcessedFixNs_ = 0;
+    float     lastSampleRateHz_   = 0.0f;
 
     // Reset handoff (control thread -> sensor thread)
     std::atomic<bool> resetPending_{false};

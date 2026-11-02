@@ -143,6 +143,7 @@ void MotionEngine::onSensorEvent(const ASensorEvent& event) {
             return;
         case SENSOR_TYPE_GYROSCOPE:
             liveSensorMask_ |= (1u << MASK_BIT_GYRO);
+            lastGyro_ = {event.data[0], event.data[1], event.data[2]};
             frame_.yawRate = event.data[2];  // device Z-axis gyro
             break;
         case SENSOR_TYPE_MAGNETIC_FIELD:
@@ -156,22 +157,32 @@ void MotionEngine::onSensorEvent(const ASensorEvent& event) {
             break;
         case SENSOR_TYPE_ROTATION_VECTOR:
             liveSensorMask_ |= (1u << MASK_BIT_ROT_VEC);
+            envSensors_.onRotationVector(event.data, 4);
+            frame_.headingRad = envSensors_.headingRad();
+            if ((liveSensorMask_ & (1u << MASK_BIT_GAME_ROT_VEC)) == 0) {
+                orientRef_.update(event.data, 0.01f);
+            }
             break;
         case SENSOR_TYPE_GAME_ROTATION_VECTOR:
             liveSensorMask_ |= (1u << MASK_BIT_GAME_ROT_VEC);
+            orientRef_.update(event.data, 0.01f);
             break;
         case SENSOR_TYPE_PRESSURE:
             liveSensorMask_ |= (1u << MASK_BIT_PRESSURE);
-            frame_.pressureHpa = event.data[0];
+            envSensors_.onPressure(event.data[0], 0.1f);
+            frame_.pressureHpa = envSensors_.pressureHpa();
+            frame_.climbRate   = envSensors_.climbRate();
             break;
         case SENSOR_TYPE_LIGHT:
             liveSensorMask_ |= (1u << MASK_BIT_LIGHT);
-            frame_.ambientLux = event.data[0];
+            envSensors_.onLight(event.data[0]);
+            frame_.ambientLux = envSensors_.lux();
             break;
         case SENSOR_TYPE_PROXIMITY:
             liveSensorMask_ |= (1u << MASK_BIT_PROXIMITY);
-            frame_.proximityCm = event.data[0];
-            if (event.data[0] < 1.0f) {
+            envSensors_.onProximity(event.data[0]);
+            frame_.proximityCm = envSensors_.proximityCm();
+            if (envSensors_.near()) {
                 frame_.flags |= (1 << FLAG_PROXIMITY_NEAR);
             } else {
                 frame_.flags &= ~(1 << FLAG_PROXIMITY_NEAR);
@@ -179,6 +190,7 @@ void MotionEngine::onSensorEvent(const ASensorEvent& event) {
             break;
         case SENSOR_TYPE_STEP_DETECTOR:
             liveSensorMask_ |= (1u << MASK_BIT_STEP_DETECTOR);
+            walkingDet_.onStepEvent(event.timestamp);
             break;
         default:
             break;
@@ -203,6 +215,14 @@ void MotionEngine::processAccelEvent(const ASensorEvent& event) {
         lastAccelTimestampNs_ = 0;
         droppedSamples_       = 0;
         liveSensorMask_       = 0;
+        lastProcessedFixNs_   = 0;
+    }
+
+    // Compute dt before updating lastAccelTimestampNs_
+    float dt = 0.01f;
+    if (lastAccelTimestampNs_ > 0 && tsNs > lastAccelTimestampNs_) {
+        dt = static_cast<float>(tsNs - lastAccelTimestampNs_) * 1e-9f;
+        if (dt > 0.1f) dt = 0.01f;
     }
 
     // ── Rate measurement ──
@@ -229,13 +249,127 @@ void MotionEngine::processAccelEvent(const ASensorEvent& event) {
     }
     lastAccelTimestampNs_ = tsNs;
 
+    // ── Read latest config snapshot ──
+    RuntimeConfig cfg;
+    {
+        std::lock_guard<std::mutex> lock(configMutex_);
+        cfg = config_;
+    }
+
+    // Reconfigure band-pass filter if sample rate changed
+    if (cfg.sampleRateHz != lastSampleRateHz_) {
+        lastSampleRateHz_ = cfg.sampleRateHz;
+        bandPassX_.setCoefficients(BP_LOW_HZ, BP_HIGH_HZ, cfg.sampleRateHz);
+        bandPassY_.setCoefficients(BP_LOW_HZ, BP_HIGH_HZ, cfg.sampleRateHz);
+        bandPassZ_.setCoefficients(BP_LOW_HZ, BP_HIGH_HZ, cfg.sampleRateHz);
+    }
+
+    // ── Check for new GPS fix (non-blocking) ──
+    {
+        std::unique_lock<std::mutex> lock(fixMutex_, std::try_to_lock);
+        if (lock.owns_lock() && latestFix_.timestamp > lastProcessedFixNs_) {
+            lastProcessedFixNs_ = latestFix_.timestamp;
+            speedEst_.onFix(latestFix_.speedMps, latestFix_.speedAccMps, latestFix_.timestamp);
+        }
+    }
+
     // ── Store raw accel for debug output (device frame) ──
     frame_.longAccel = event.data[1];   // Y: forward in default portrait
     frame_.latAccel  = event.data[0];   // X: right in default portrait
+    const Vec3 rawAccel{event.data[0], event.data[1], event.data[2]};
 
-    // ── C1: shifts stay zero, flow stays at fixed defaults ──
-    // Processing stages (gravity, band-pass, view-frame, etc.) are stubs.
-    // flowDirX=0, flowDirY=1, flowRate=0, shiftX=0, shiftY=0, speedMps=-1, confidence=1.0
+    // ── 1. Gravity estimation & linear accel extraction ──
+    gravityEst_.update(rawAccel, lastGyro_, dt);
+    const Vec3 linAccel = gravityEst_.linearAccel(rawAccel);
+
+    // ── 2. Rotate to view frame (display orientation) ──
+    const Vec3 viewAccel = OrientationReference::toViewFrame(linAccel, cfg.displayRotation);
+
+    // ── 3. Band-pass filtering (removes DC drift and high-freq vibrations) ──
+    const float bpX = bandPassX_.process(viewAccel.x);
+    const float bpY = bandPassY_.process(viewAccel.y);
+
+    // ── 4. Dead-zone & sensitivity scaling ──
+    float deadX = 0.0f;
+    if (std::abs(bpX) > cfg.deadZone) {
+        deadX = bpX - std::copysign(cfg.deadZone, bpX);
+    }
+    float deadY = 0.0f;
+    if (std::abs(bpY) > cfg.deadZone) {
+        deadY = bpY - std::copysign(cfg.deadZone, bpY);
+    }
+
+    float rawShiftX = (deadX / cfg.referenceAccel) * cfg.sensitivity;
+    float rawShiftY = (deadY / cfg.referenceAccel) * cfg.sensitivity;
+
+    // ── 5. Detectors update ──
+    const float accelEnergy = linAccel.length();
+    const float gyroMag = lastGyro_.length();
+
+    walkingDet_.update(dt, accelEnergy);
+    rawShiftX *= walkingDet_.shiftGain();
+    rawShiftY *= walkingDet_.shiftGain();
+
+    const bool hasPressure = (liveSensorMask_ & (1u << MASK_BIT_PRESSURE)) != 0;
+    stationaryDet_.update(accelEnergy, gyroMag, speedEst_.speed(), speedEst_.valid(),
+                          frame_.climbRate, hasPressure, dt);
+
+    if (stationaryDet_.stationary()) {
+        speedEst_.onStationary();
+    }
+
+    // ── 6. Speed estimator update ──
+    speedEst_.update(viewAccel.y, dt);
+
+    // ── 7. Dot motion model update ──
+    dotMotion_.update(
+        rawShiftX, rawShiftY,
+        cfg.accelWeight(),
+        cfg.flowWeight() * walkingDet_.flowMult(),
+        cfg.flowGain,
+        cfg.flowFloorMps(),
+        cfg.flowCapUnits,
+        speedEst_.speed(),
+        speedEst_.valid(),
+        frame_.confidence,
+        cfg.springStiffness,
+        cfg.springDamping,
+        dt
+    );
+
+    // ── 8. Populate output frame ──
+    frame_.shiftX        = dotMotion_.shiftX();
+    frame_.shiftY        = dotMotion_.shiftY();
+    frame_.flowRate      = dotMotion_.flowRate();
+    frame_.speedMps      = speedEst_.speed();
+    frame_.stationarySec = stationaryDet_.stationarySec();
+
+    // ── 9. Status flags ──
+    frame_.flags |= (1 << FLAG_SENSORS_RUNNING);
+
+    if (gravityEst_.settled()) {
+        frame_.flags |= (1 << FLAG_GRAVITY_SETTLED);
+    } else {
+        frame_.flags &= ~(1 << FLAG_GRAVITY_SETTLED);
+    }
+
+    if (speedEst_.valid()) {
+        frame_.flags |= (1 << FLAG_SPEED_VALID);
+    } else {
+        frame_.flags &= ~(1 << FLAG_SPEED_VALID);
+    }
+
+    if (walkingDet_.walking()) {
+        frame_.flags |= (1 << FLAG_WALKING);
+    } else {
+        frame_.flags &= ~(1 << FLAG_WALKING);
+    }
+
+    if (stationaryDet_.stationary()) {
+        frame_.flags |= (1 << FLAG_STATIONARY);
+    } else {
+        frame_.flags &= ~(1 << FLAG_STATIONARY);
+    }
 
     // ── Write frame ──
     frame_.sensorMask     = static_cast<int32_t>(liveSensorMask_);

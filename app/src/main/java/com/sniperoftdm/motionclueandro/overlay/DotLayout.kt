@@ -2,77 +2,100 @@
 package com.sniperoftdm.motionclueandro.overlay
 
 /**
- * Computes dot positions for two vertical columns (left and right edges, mirrored).
- * No allocations after init — positions are updated in-place each frame.
+ * Computes dot positions for two vertical columns along screen edges.
+ * Zero allocations in compute().
  *
- * Pattern wraps vertically using flow's Y component.
- * Shift moves dots sideways (X) and vertically (Y), clamped inside the band.
+ * Pattern wraps vertically using flow and shifts with acceleration.
+ * Both columns shift in unison with vehicle lateral acceleration.
  */
 class DotLayout {
-    // Configuration — set before first frame
     var screenWidth: Int = 0
     var screenHeight: Int = 0
-    var dotCount: Int = 10          // dots per column
-    var edgeBandDp: Float = 28f     // dp from screen edge to dot center
-    var dotRadiusPx: Float = 0f     // for clamping
-    var density: Float = 1f         // display density
+    var dotCount: Int = 10
+    var edgeBandDp: Float = 28f
+    var dotRadiusPx: Float = 0f
+    var density: Float = 1f
 
-    // Per-frame input
-    var shiftX: Float = 0f          // -1..1 from engine, already inverted if needed
-    var shiftY: Float = 0f          // -1..1 from engine
-    var flowPhase: Float = 0f       // accumulated flow phase in pixels
+    var shiftX: Float = 0f
+    var shiftY: Float = 0f
+    var flowPhase: Float = 0f
 
-    // Output arrays — index 0..dotCount-1 = left column, dotCount..2*dotCount-1 = right
     private val xPositions = FloatArray(MAX_DOTS * 2)
     private val yPositions = FloatArray(MAX_DOTS * 2)
     var totalDots: Int = 0
         private set
 
     /**
-     * Recompute all dot positions for the current frame. Zero allocations.
+     * Clamps value safely between min and max without throwing on inverted bounds or NaN.
+     */
+    private fun safeClamp(value: Float, boundA: Float, boundB: Float): Float {
+        if (value.isNaN()) return boundA
+        val low = minOf(boundA, boundB)
+        val high = maxOf(boundA, boundB)
+        return value.coerceIn(low, high)
+    }
+
+    /**
+     * Mathematical modulo that always yields a non-negative result in [0, m).
+     */
+    private fun mod(value: Float, m: Float): Float {
+        if (m <= 0f) return 0f
+        val r = value % m
+        return if (r < 0f) r + m else r
+    }
+
+    /**
+     * Recompute dot positions in-place. Zero allocations.
      */
     fun compute(maxShiftPx: Float) {
+        if (screenWidth <= 0 || screenHeight <= 0 || dotCount <= 0) {
+            totalDots = 0
+            return
+        }
+
+        val clampedDotCount = dotCount.coerceIn(1, MAX_DOTS)
+        totalDots = clampedDotCount * 2
+
         val bandPx = edgeBandDp * density
         val leftCenterX = bandPx
-        val rightCenterX = screenWidth - bandPx
-        val spacing = if (dotCount > 0) screenHeight.toFloat() / dotCount else screenHeight.toFloat()
+        val rightCenterX = screenWidth.toFloat() - bandPx
+        val spacing = screenHeight.toFloat() / clampedDotCount.toFloat()
+        val totalHeight = screenHeight.toFloat()
 
-        totalDots = dotCount * 2
+        // Sanitize shift and flow inputs against NaN or Inf
+        val safeShiftX = if (shiftX.isNaN() || shiftX.isInfinite()) 0f else shiftX.coerceIn(-1f, 1f)
+        val safeShiftY = if (shiftY.isNaN() || shiftY.isInfinite()) 0f else shiftY.coerceIn(-1f, 1f)
+        val safeFlow = if (flowPhase.isNaN() || flowPhase.isInfinite()) 0f else flowPhase
 
-        val shiftPxX = shiftX * maxShiftPx
-        val shiftPxY = shiftY * maxShiftPx
+        val shiftPxX = safeShiftX * maxShiftPx
+        val shiftPxY = safeShiftY * maxShiftPx
 
-        // Wrap flowPhase into [0, spacing)
-        val wrappedPhase = if (spacing > 0f) {
-            val p = (flowPhase % spacing)
-            if (p < 0f) p + spacing else p
-        } else 0f
+        // Wrap flow smoothly within one cycle of totalHeight
+        val wrappedFlow = mod(safeFlow, totalHeight)
 
-        val totalHeight = spacing * dotCount
+        // Left column X: clamped safely inside edge band
+        val lx = safeClamp(leftCenterX + shiftPxX, dotRadiusPx, bandPx * 2f)
+        // Right column X: shifts in the SAME direction as left column, clamped safely inside right band
+        val rx = safeClamp(
+            rightCenterX + shiftPxX,
+            screenWidth.toFloat() - bandPx * 2f,
+            screenWidth.toFloat() - dotRadiusPx,
+        )
 
-        for (i in 0 until dotCount) {
-            // Base Y: evenly spaced, offset by half spacing so dots start mid-gap
+        for (i in 0 until clampedDotCount) {
             val baseY = spacing * 0.5f + spacing * i
+            // Base position advanced by flow, wrapped smoothly across the full column
+            val flowY = mod(baseY + wrappedFlow, totalHeight)
+            // Inertial shift moves the entire column together
+            val y = flowY + shiftPxY
 
-            // Apply flow phase (vertical wrap) and shift
-            var y = baseY + wrappedPhase + shiftPxY
-            // Wrap vertically
-            y = y % totalHeight
-            if (y < -spacing * 0.5f) y += totalHeight
-            if (y > screenHeight + spacing * 0.5f) y -= totalHeight
-
-            // Left column: clamp X inside the band
-            val lx = (leftCenterX + shiftPxX).coerceIn(dotRadiusPx, bandPx * 2f)
+            // Left column dot
             xPositions[i] = lx
             yPositions[i] = y
 
-            // Right column: mirrored shift
-            val rx = (rightCenterX - shiftPxX).coerceIn(
-                screenWidth - bandPx * 2f,
-                screenWidth - dotRadiusPx,
-            )
-            xPositions[dotCount + i] = rx
-            yPositions[dotCount + i] = y
+            // Right column dot
+            xPositions[clampedDotCount + i] = rx
+            yPositions[clampedDotCount + i] = y
         }
     }
 
@@ -80,6 +103,6 @@ class DotLayout {
     fun getY(index: Int): Float = yPositions[index]
 
     companion object {
-        const val MAX_DOTS = 24 // supports density up to 20 dots per column
+        const val MAX_DOTS = 24
     }
 }

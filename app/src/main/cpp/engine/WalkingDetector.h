@@ -4,7 +4,7 @@
 namespace motionclue {
 
 // Walking detection from step detector or accel energy (pipeline stage 7).
-// Phase C1 stub: always not walking.
+// Counts steps in a sliding window; holds walking state with timeout.
 class WalkingDetector {
 public:
     void onStepEvent(int64_t timestampNs);
@@ -13,6 +13,14 @@ public:
     float shiftGain() const;
     float flowMult() const;
     void reset();
+
+private:
+    static constexpr int MAX_STEPS = 32;
+    int64_t stepRing_[MAX_STEPS] = {};
+    int ringHead_ = 0;
+    int ringCount_ = 0;
+    float holdTimerS_ = 0.0f;
+    bool walking_ = false;
 };
 
 } // namespace motionclue

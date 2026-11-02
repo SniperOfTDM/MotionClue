@@ -24,6 +24,9 @@ private:
     float lux_ = -1.0f;
     float proximityCm_ = -1.0f;
     float pressureHpa_ = -1.0f;
+    float smoothedPressure_ = -1.0f;
+    float climbRate_ = 0.0f;
+    float headingRad_ = -1.0f;
 };
 
 } // namespace motionclue

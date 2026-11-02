@@ -3,7 +3,7 @@
 namespace motionclue {
 
 // Spring-damper shift + flow rate (pipeline stage 12).
-// Phase C1 stub: zero output.
+// Second-order critically damped spring driven by filtered lateral acceleration.
 class DotMotionModel {
 public:
     void update(float rawShiftX, float rawShiftY,
@@ -18,6 +18,8 @@ public:
 
 private:
     float shiftX_ = 0.0f, shiftY_ = 0.0f, flowRate_ = 0.0f;
+    float velX_ = 0.0f, velY_ = 0.0f;
+    float flowSmooth_ = 0.0f;
 };
 
 } // namespace motionclue

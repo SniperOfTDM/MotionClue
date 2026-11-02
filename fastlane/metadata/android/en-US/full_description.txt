@@ -1,0 +1,15 @@
+MotionClue reduces motion sickness (kinetosis) when using your phone as a passenger in a moving car, bus, train, or boat.
+
+When reading or watching content in a moving vehicle, sensory conflict occurs: your inner ear feels acceleration, braking, and turns, while your eyes look at a static screen. MotionClue renders subtle animated dots along the screen edges that move in real time with physical forces, giving your peripheral vision the visual motion reference your brain needs.
+
+Key Features:
+- Native C++ sensor fusion engine running on a dedicated thread with zero garbage-collection latency
+- Spring-damped motion dynamics calibrated to physical vehicle acceleration
+- GPS speed integration for speed-proportional flow along edge margins
+- Vehicle profiles: Car, Bus/Metro, High-Speed Train, and Boat/Ferry
+- Adaptive brightness: dots dim in darkness and brighten in direct sunlight
+- Pocket detection: proximity sensor automatically pauses the overlay
+- Walking detection: step detector pauses cues when on foot
+- Display rotation aware: seamless transitions across portrait and landscape
+- 100% offline: zero network permissions, zero telemetry, zero analytics
+- Open source under GPL-3.0

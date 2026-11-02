@@ -1,0 +1,6 @@
+Initial release:
+- Native C++ spring-damped sensor engine
+- Vehicle motion cues overlay for Android 8.0+
+- GPS speed flow mode
+- Transport presets (Car, Bus, Train, Boat)
+- Adaptive brightness and pocket detection

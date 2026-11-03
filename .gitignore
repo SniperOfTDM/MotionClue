@@ -53,3 +53,7 @@ desktop.ini
 # Graft tool cache (development only)
 graft/
 scripts/
+
+# Audit notes
+PROBLEMS.md
+

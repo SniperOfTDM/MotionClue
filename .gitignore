@@ -52,3 +52,4 @@ desktop.ini
 
 # Graft tool cache (development only)
 graft/
+scripts/

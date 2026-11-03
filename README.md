@@ -1,147 +1,236 @@
-# MotionClue
+<p align="center">
+  <img src="docs/media/icon.png" width="128" height="128" alt="MotionClue icon" />
+</p>
 
-Vehicle Motion Cues for every Android phone (Android 8.0+). Reduce motion sickness while using your screen on the road.
+<h1 align="center">MotionClue</h1>
 
-[![Build](https://github.com/SniperOfTDM/MotionClue/actions/workflows/build.yml/badge.svg)](https://github.com/SniperOfTDM/MotionClue/actions/workflows/build.yml)
-[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Min API](https://img.shields.io/badge/min%20API-26%20(Android%208.0)-brightgreen.svg)](app/build.gradle.kts)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-purple.svg)](build.gradle.kts)
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](app/src/main/cpp/CMakeLists.txt)
-[![No Internet Required](https://img.shields.io/badge/Privacy-100%25%20Offline-green.svg)](#privacy)
+<p align="center">
+  <b>Stop motion sickness. Keep using your phone.</b><br>
+  Real-time vehicle motion cues for Android — open source, 100% offline, zero tracking.
+</p>
 
-<!-- Replace with the real GIF once recorded: docs/media/demo.gif -->
-> **Demo GIF placeholder** — see [Recording instructions](#recording-a-demo-gif) below.
+<p align="center">
+  <a href="https://github.com/SniperOfTDM/MotionClue/releases/latest"><img src="https://img.shields.io/github/v/release/SniperOfTDM/MotionClue?style=for-the-badge&logo=github&label=Download&color=2ea043" alt="Download Latest Release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge" alt="License: GPL-3.0" /></a>
+  <a href="https://github.com/SniperOfTDM/MotionClue/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/SniperOfTDM/MotionClue/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build" alt="Build Status" /></a>
+</p>
 
----
-
-## Why MotionClue?
-
-Using a smartphone in a moving vehicle triggers motion sickness (*kinetosis*). Your vestibular system (inner ear) feels physical acceleration, braking, and turns, but your eyes focus on a stationary display. This sensory mismatch confuses the brain, causing nausea, fatigue, and headaches.
-
-MotionClue places subtle, animated dots along screen margins that shift and flow in real time with vehicle physics. By providing a peripheral visual motion reference, MotionClue bridges the sensory conflict between your eyes and inner ear without obstructing your apps, text, or videos.
-
----
-
-## Comparison With Alternatives
-
-| Feature | Apple Vehicle Motion Cues | Google Motion Assist | KineStop | MotionClue |
-|:---|:---:|:---:|:---:|:---:|
-| **Platform** | iOS 18+ only | Android 17+ only | Android 5.0+ | **Android 8.0+ (API 26+)** |
-| **Availability** | Apple devices | Newer Pixel/Flagships | Play Store | **Any Android device** |
-| **Open Source** | ❌ Proprietary | ❌ Proprietary | ❌ Closed Source | **✅ GPL-3.0** |
-| **Privacy / No Internet** | ✅ | ❓ (Play Services) | ❌ Ad-supported | **✅ 100% Offline (No INTERNET perm)** |
-| **Processing Engine** | OS Native | OS Native | Java service | **Native C++ (Zero GC jitter)** |
-| **Lock-free Shared Buffer**| OS | OS | ❌ | **✅ Seqlock (120-byte payload)** |
-| **Inertial Spring Model** | ✅ | ✅ | Basic horizon | **✅ 2nd-order damped spring** |
-| **GPS Speed Flow Mode** | ❌ (Turns/Accel only) | ❌ (Turns/Accel only) | ❌ | **✅ Hybrid Blend (Inertia + Speed)** |
-| **Vehicle Presets** | ❌ | ❌ | ❌ | **✅ Car, Bus, Train, Boat** |
-| **Walking Detection Pause**| ✅ | ❓ | ❌ | **✅ Step detector + energy gating** |
-| **Adaptive Brightness** | ❌ | ❌ | ❌ | **✅ Ambient light sensor** |
-| **Pocket Auto-Hide** | ❌ | ❌ | ❌ | **✅ Proximity sensor** |
+<p align="center">
+  <a href="#"><img src="https://img.shields.io/badge/Android-8.0%2B%20(API%2026)-34A853?style=for-the-badge&logo=android&logoColor=white" alt="Android 8.0+" /></a>
+  <a href="build.gradle.kts"><img src="https://img.shields.io/badge/Kotlin-2.1-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin 2.1" /></a>
+  <a href="app/src/main/cpp/CMakeLists.txt"><img src="https://img.shields.io/badge/C%2B%2B17-Native%20Engine-00599C?style=for-the-badge&logo=cplusplus&logoColor=white" alt="C++17" /></a>
+  <a href="#privacy"><img src="https://img.shields.io/badge/Privacy-100%25%20Offline-success?style=for-the-badge&logo=shieldsdotio&logoColor=white" alt="100% Offline" /></a>
+</p>
 
 ---
 
-## Features
-
-- **Click-through system overlay**: Runs smoothly on top of Chrome, YouTube, readers, or games.
-- **Physical spring-damper model**: Dots react dynamically to cornering, braking, and acceleration.
-- **GPS speed flow**: Dots stream along edges proportional to actual vehicular speed.
-- **Transport presets**: One-tap profiles optimized for Car, Bus/Metro, High-Speed Train, and Boat.
-- **Walking detection auto-pause**: Halts cues when on foot to avoid false triggers.
-- **Adaptive ambient brightness**: Dims in darkness, brightens under direct sunlight.
-- **Proximity pocket detection**: Turns off the overlay instantly when placed in a pocket or bag.
-- **Material You Dynamic Colors**: Matches your system theme on Android 12+.
-- **Quick Settings Tile**: One-tap toggle from anywhere.
-- **Native C++ sensor thread**: 100 Hz sampling on a dedicated thread with zero JVM garbage collection pauses.
-- **100% Offline and Private**: No `INTERNET` permission, zero telemetry, zero analytics.
+<!-- Replace with actual screenshots once captured -->
+<p align="center">
+  <i>📱 Screenshots coming soon — see <a href="#recording-a-demo">Recording a Demo</a> below</i>
+</p>
 
 ---
 
-## Architecture & How It Works
+## The Problem
+
+Reading, texting, or watching videos as a passenger triggers **motion sickness** (kinetosis). Your inner ear senses acceleration, braking, and turns — but your eyes see a static screen. This sensory mismatch causes nausea, headaches, and fatigue.
+
+**Apple solved this for iOS 18.** Google's Motion Assist requires Android 17 and flagship Pixels.
+
+MotionClue brings the same relief to **every Android phone since 2017**, completely free.
+
+---
+
+## How It Works
+
+Subtle animated dots appear along your screen edges and respond in real time to vehicle physics. Your peripheral vision picks up these cues, bridging the gap between what your body feels and what your eyes see — without covering your apps.
 
 ```mermaid
 flowchart LR
-    S["Hardware sensors\n(accel, gyro, mag, light, proximity, pressure)"]
-    G["GPS Provider\n(LocationManager)"]
-    E["Native C++ Engine\n(complementary filter, biquad bandpass,\nspring-damper, speed fusion)"]
-    B["Direct ByteBuffer\n(128 bytes, lock-free seqlock)"]
-    K["Kotlin Overlay View\n(Choreographer 60-120fps Canvas)"]
+    S["📡 Hardware Sensors\n(accel, gyro, mag,\nlight, proximity, pressure)"]
+    G["📍 GPS Provider"]
+    E["⚡ Native C++ Engine\n(100 Hz, dedicated thread)"]
+    B["🔒 Lock-free Buffer\n(128 bytes, seqlock)"]
+    K["🎨 Overlay Renderer\n(60-120 fps Canvas)"]
 
     S --> E
-    G -->|setFix| E
+    G -->|speed fix| E
     E -->|memcpy| B
     B -->|atomic read| K
 ```
 
-1. **Hardware sampling**: Sensor events arrive at 100 Hz on a dedicated pthread.
-2. **Gravity separation**: Complementary filter with gyro-predictive integration and accelerometer gating.
-3. **View-frame rotation**: Rotates device acceleration into display coordinates based on screen orientation.
-4. **Biquad band-pass**: High-pass eliminates DC drift, low-pass strips engine and road vibrations.
-5. **Spring dynamics**: 2nd-order critically damped model integrates forces into smooth sub-pixel shifts.
-6. **Speed fusion**: GPS speed combines with forward acceleration for continuous speed-flow rates.
-7. **Lock-free publishing**: Native engine writes 120-byte state into a shared seqlock buffer.
-8. **Render loop**: Kotlin overlay reads the buffer during display vsync via Choreographer.
+---
+
+## ✨ Features
+
+<table>
+<tr>
+<td width="50%">
+
+**🧠 Smart Motion Engine**
+- 2nd-order spring-damped physics model
+- Complementary gravity filter with gyro prediction
+- Biquad bandpass strips vibration noise
+- GPS + inertia hybrid speed fusion
+
+</td>
+<td width="50%">
+
+**🚗 Vehicle Presets**
+- Car — tuned for stop-and-go traffic
+- Bus / Metro — optimized for frequent stops
+- High-Speed Train — handles smooth high-velocity
+- Boat / Ferry — adapted for wave motion
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**🔋 Battery Aware**
+- Walking auto-pause via step detector
+- Pocket auto-hide via proximity sensor
+- Adaptive brightness via ambient light sensor
+- Stationary detection cuts processing at rest
+
+</td>
+<td width="50%">
+
+**🎨 Native Experience**
+- Material You dynamic colors (Android 12+)
+- Quick Settings tile for one-tap toggle
+- Click-through overlay — never blocks your apps
+- Supports portrait + landscape rotation
+
+</td>
+</tr>
+</table>
+
+<p align="center">
+
+**🔒 No Internet permission. No telemetry. No analytics. No ads. Ever.**
+
+</p>
 
 ---
 
-## Install
+## Comparison
 
-### Download APK
-Download the latest APK from the [Releases](https://github.com/SniperOfTDM/MotionClue/releases) page.
+| | Apple Motion Cues | Google Motion Assist | KineStop | **MotionClue** |
+|:---|:---:|:---:|:---:|:---:|
+| **Platform** | iOS 18+ | Android 17+ | Android 5+ | **Android 8.0+** |
+| **Devices** | Apple only | Pixel/Flagships | Play Store | **Any Android** |
+| **Open Source** | ❌ | ❌ | ❌ | **✅ GPL-3.0** |
+| **Offline / No Internet** | ✅ | ❌ Play Services | ❌ Ad-supported | **✅ Zero network** |
+| **Engine** | OS native | OS native | Java | **Native C++** |
+| **Spring Physics** | ✅ | ✅ | Basic | **✅ Critically damped** |
+| **GPS Speed Flow** | ❌ | ❌ | ❌ | **✅ Hybrid blend** |
+| **Vehicle Presets** | ❌ | ❌ | ❌ | **✅ 4 modes** |
+| **Walking Pause** | ✅ | Partial | ❌ | **✅ Step + energy** |
+| **Adaptive Brightness** | ❌ | ❌ | ❌ | **✅** |
+| **Pocket Detection** | ❌ | ❌ | ❌ | **✅** |
+
+---
+
+## 📥 Install
+
+### Download
+
+Grab the latest APK from **[GitHub Releases](https://github.com/SniperOfTDM/MotionClue/releases/latest)**.
 
 ### Build From Source
+
 ```bash
 git clone https://github.com/SniperOfTDM/MotionClue.git
 cd MotionClue
 ./gradlew assembleDebug
+# APK → app/build/outputs/apk/debug/app-debug.apk
 ```
-The output APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
+
+### Xiaomi / HyperOS / MIUI Users
+
+Aggressive battery managers can kill the overlay. Fix with these settings:
+
+1. **Overlay**: Settings → Apps → MotionClue → Other permissions → Display pop-up windows ✅
+2. **Autostart**: Settings → Apps → MotionClue → Autostart ✅
+3. **Battery**: Settings → Apps → MotionClue → Battery saver → **No restrictions**
+4. **Lock in Recents**: App Switcher → long-press MotionClue → **Lock**
 
 ---
 
-## Permissions
+## 🔐 Privacy
 
-| Permission | Purpose |
+MotionClue does **not** include the `INTERNET` permission. It is physically impossible for the app to make network requests or transmit any data.
+
+| Permission | Why |
 |:---|:---|
-| `SYSTEM_ALERT_WINDOW` | Renders the motion dots on top of active applications |
-| `FOREGROUND_SERVICE` | Keeps sensor fusion active with the screen on |
-| `FOREGROUND_SERVICE_SPECIAL_USE` | Required on Android 14+ for foreground overlay services |
-| `FOREGROUND_SERVICE_LOCATION` | Allows reading GPS speed while active |
-| `ACCESS_FINE_LOCATION` | Computes vehicle speed for the flowing dot cue |
-| `POST_NOTIFICATIONS` | Foreground service notification on Android 13+ |
+| `SYSTEM_ALERT_WINDOW` | Render dots over other apps |
+| `FOREGROUND_SERVICE` | Keep sensor engine alive |
+| `FOREGROUND_SERVICE_SPECIAL_USE` | Required on Android 14+ |
+| `FOREGROUND_SERVICE_LOCATION` | Read GPS speed while active |
+| `ACCESS_FINE_LOCATION` | Compute vehicle speed |
+| `POST_NOTIFICATIONS` | Foreground service notification (Android 13+) |
 
 ---
 
-## Xiaomi / HyperOS / MIUI Setup
+## 🏗️ Architecture
 
-Aggressive battery managers on HyperOS, MIUI, and ColorOS can terminate background overlays. To ensure uninterrupted operation:
+MotionClue is a hybrid **Kotlin + C++17** Android app. Sensor processing runs on a dedicated native pthread for guaranteed low latency with zero GC pauses.
 
-1. **Overlay permission**: Settings → Apps → MotionClue → Other permissions → Display pop-up windows (Enable)
-2. **Autostart**: Settings → Apps → MotionClue → Autostart (Enable)
-3. **Battery Saver**: Settings → Apps → MotionClue → Battery saver → **No restrictions**
-4. **Lock in Recents**: Open MotionClue, open App Switcher, long-press the card and select **Lock**
+<details>
+<summary>📂 Module Layout</summary>
+
+```
+app/src/main/
+├── cpp/                        # Native C++ engine
+│   ├── engine/
+│   │   ├── MotionEngine        # Top-level orchestrator
+│   │   ├── SensorSource        # 100 Hz ASensorEventQueue
+│   │   ├── GravityEstimator    # Complementary filter
+│   │   ├── BandPass            # IIR biquad filter
+│   │   ├── DotMotionModel      # Spring dynamics + speed flow
+│   │   ├── WalkingDetector     # Step counter gating
+│   │   ├── StationaryDetector  # Zero-motion detection
+│   │   ├── EnvSensors          # Light, proximity, pressure
+│   │   └── SharedFrame         # Seqlock buffer writer
+│   └── jni_bridge.cpp          # JNI entry points
+├── java/.../motionclueandro/
+│   ├── bridge/                 # Kotlin↔Native boundary
+│   ├── service/                # Foreground service + GPS
+│   ├── overlay/                # Canvas renderer (Choreographer)
+│   ├── tile/                   # Quick Settings tile
+│   ├── data/                   # DataStore preferences
+│   └── ui/                     # Jetpack Compose UI
+└── AndroidManifest.xml
+```
+
+</details>
+
+**Processing Pipeline:**
+
+1. **Sample** — Hardware sensors at 100 Hz on a native pthread
+2. **Separate** — Complementary filter isolates gravity from linear acceleration
+3. **Rotate** — Transform to display coordinates for current screen orientation
+4. **Filter** — Biquad bandpass removes DC drift and engine vibrations
+5. **Model** — Spring-damper integrates forces into smooth sub-pixel dot shifts
+6. **Fuse** — GPS speed blends with forward acceleration for edge flow rate
+7. **Publish** — 120-byte state written to lock-free seqlock buffer
+8. **Render** — Kotlin overlay reads buffer at display vsync via Choreographer
 
 ---
 
-## Recording a Demo GIF
+## 🤝 Contributing
 
-1. Enable screen recording on your phone (or run `adb shell screenrecord /sdcard/demo.mp4`).
-2. Open MotionClue, start the overlay, and tilt/move the device or ride in a vehicle.
-3. Keep the clip under 12 seconds.
-4. Convert to GIF (e.g., using ffmpeg):
-   ```bash
-   ffmpeg -i demo.mp4 -vf "fps=20,scale=360:-1:flags=lanczos" -loop 0 docs/media/demo.gif
-   ```
-5. Place the resulting file at `docs/media/demo.gif`.
+Pull requests welcome. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for build setup, code style, and sensor test submission guides.
 
 ---
 
-## Contributing
+## 📄 License
 
-Pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture details and sensor test submission guides.
+[GNU General Public License v3.0](LICENSE) — free as in freedom.
 
 ---
 
-## License
-
-[GNU General Public License v3.0 (GPL-3.0)](LICENSE)
+<p align="center">
+  <sub>If MotionClue saved you from car sickness, consider giving it a ⭐ — it helps others find it.</sub>
+</p>

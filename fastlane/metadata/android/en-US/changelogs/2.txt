@@ -1,5 +1,5 @@
 First production release:
-- Native C++ spring-damped sensor engine (100 Hz, zero GC)
+- Native C++ spring-damped sensor engine (100 Hz native thread)
 - Vehicle motion cues overlay for Android 8.0+
 - GPS speed flow mode with inertia fusion
 - Transport presets: Car, Bus/Metro, Train, Boat
@@ -8,4 +8,4 @@ First production release:
 - Adaptive brightness and pocket detection
 - Walking auto-pause via step detector
 - Stationary detection saves battery at rest
-- 100% offline with zero network permissions
+- Offline operation with no INTERNET permission
